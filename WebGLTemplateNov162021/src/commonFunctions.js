@@ -448,3 +448,286 @@ async function addMesh(object, vertShader = null, fragShader = null) {
         return created;
     }
 }
+
+
+
+function connectTracks(state){
+    map = {};
+
+    for (let i = 0; i < state.objects.length; i++) {
+        var object = state.objects[i];
+
+        if(object.name.includes("trackType")){
+
+            x = Math.round(object.model.position[0]);
+            z = Math.round(object.model.position[2]);
+            var exit1 = [null, null, null];
+            var exit2 = [null, null, null];
+
+
+            map[x.toString() +","+ z.toString()] = i; //save object index in coords
+
+            //save position on map
+            if(object.model.position[0]%1 == 0){   //if absolut coords (straight rails)
+                
+                object.horizontal = object.model.rotation[0] > 0.5; //direction
+
+                if(object.horizontal){
+                    //Exit1 east
+                    var stringCoord = (x-3).toString() +","+ (z+1).toString(); //left
+                    if(map[stringCoord]){              //if left exists: save exit left
+                        exit1[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    var stringCoord = (x-2).toString() +","+ z.toString(); //forward
+                    if(map[stringCoord]){ 
+                        exit1[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    var stringCoord = (x-3).toString() +","+ (z-1).toString(); //right
+                    if(map[stringCoord]){
+                        exit1[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    //Exit2 west
+                    var stringCoord = (x+3).toString() +","+ (z-1).toString(); //left
+                    if(map[stringCoord]){
+                        exit2[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    var stringCoord = (x+2).toString() +","+ z.toString(); //forward
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[1] = i;
+                    }
+
+                    var stringCoord = (x+3).toString() +","+ (z+1).toString(); //right
+                    if(map[stringCoord]){
+                        exit2[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+                
+                }else{
+                    //Exit1 north
+                    var stringCoord = (x+1).toString() +","+ (z+3).toString(); //left
+                    if(map[stringCoord]) {
+                        exit1[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    var stringCoord = (x).toString() +","+ (z+2).toString(); //forward
+                    if(map[stringCoord]) {
+                        exit1[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    var stringCoord = (x-1).toString() +","+ (z+3).toString(); //right
+                    if(map[stringCoord]) {
+                        exit1[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    //Exit2 south
+                    var stringCoord = (x-1).toString() +","+ (z-3).toString(); //left
+                    if(map[stringCoord]) {
+                        exit2[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    var stringCoord = (x).toString() +","+ (z-2).toString(); //forward
+                    if(map[stringCoord]){
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+
+                    var stringCoord = (x+1).toString() +","+ (z-3).toString(); //right
+                    if(map[stringCoord]){
+                        exit2[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[1] = i;
+                    }
+                }
+
+                
+
+            }else{
+                if( 
+                Math.round(object.model.rotation[0]) == 1 && //west to north        ^    
+                Math.round(object.model.rotation[2]) == 0){  //                   __|
+
+                    //Exit1 west
+                    var stringCoord = (x+4).toString() +","+ (z-2).toString(); //left
+                    if(map[stringCoord]){          //if left exists: save exit left
+                        exit1[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[0] = i;
+                    } 
+
+                    var stringCoord = (x+3).toString() +","+ (z-1).toString(); //forward
+                    if(map[stringCoord]){
+                        exit1[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[0] = i;
+                    }
+
+                    var stringCoord = (x+4).toString() +","+ z.toString(); //right
+                    if(map[stringCoord]){ 
+                        exit1[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[0] = i;
+                    }
+
+                    //Exit2 north
+                    var stringCoord = x.toString() +","+ (z+4).toString(); //left
+                    if(map[stringCoord]){
+                        exit2[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[2] = i;
+                    }
+
+                    var stringCoord = (x-1).toString() +","+ (z+3).toString(); //forward
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[2] = i;
+                    }
+
+                    var stringCoord = (x-2).toString() +","+ (z+4).toString(); //right
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[2] = i;
+                    }
+                        
+                }else if(
+                Math.round(object.model.rotation[0]) == 0 && //west to south     ---|
+                Math.round(object.model.rotation[2]) == -1){ //                     v
+                    //Exit1 west
+                    var stringCoord = (x+4).toString() +","+ z.toString(); //left
+                    if(map[stringCoord]){          //if left exists: save exit left
+                        exit1[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[2] = i;
+                    } 
+
+                    var stringCoord = (x+3).toString() +","+ (z+1).toString(); //forward
+                    if(map[stringCoord]){
+                        exit1[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[2] = i;
+                    }
+
+                    var stringCoord = (x+4).toString() +","+ (z+2).toString(); //right
+                    if(map[stringCoord]){ 
+                        exit1[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[2] = i;
+                    }
+
+                    //Exit2 south
+                    var stringCoord = (x-2).toString() +","+ (z-4).toString(); //left
+                    if(map[stringCoord]){
+                        exit2[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[0] = i;
+                    }
+
+                    var stringCoord = (x-1).toString() +","+ (z-3).toString(); //forward
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[0] = i;
+                    }
+
+                    var stringCoord = (x).toString() +","+ (z-4).toString(); //right
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[0] = i;
+                    }
+
+                }else if(
+                Math.round(object.model.rotation[0]) == 0 && //east to north   ^
+                Math.round(object.model.rotation[2]) == 1){  //                |___
+
+                    //Exit1 east
+                    var stringCoord = (x-4).toString() +","+ z.toString(); //left
+                    if(map[stringCoord]){          //if left exists: save exit left
+                        exit1[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[2] = i;
+                    } 
+
+                    var stringCoord = (x-3).toString() +","+ (z-1).toString(); //forward
+                    if(map[stringCoord]){
+                        exit1[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[2] = i;
+                    }
+
+                    var stringCoord = (x-4).toString() +","+ (z-2).toString(); //right
+                    if(map[stringCoord]){ 
+                        exit1[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[2] = i;
+                    }
+
+                    //Exit2 north
+                    var stringCoord = (x+2).toString() +","+ (z+4).toString(); //left
+                    if(map[stringCoord]){
+                        exit2[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[0] = i;
+                    }
+
+                    var stringCoord = (x+1).toString() +","+ (z+3).toString(); //forward
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[0] = i;
+                    }
+
+                    var stringCoord = (x).toString() +","+ (z+4).toString(); //right
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[0] = i;
+                    }
+
+                }else{                                           //east to south   |---
+                                                                 //                v
+                    //Exit1 east
+                    var stringCoord = (x-4).toString() +","+ (z+2).toString(); //left
+                    if(map[stringCoord]){          //if left exists: save exit left
+                        exit1[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[0] = i;
+                    } 
+
+                    var stringCoord = (x-3).toString() +","+ (z+1).toString(); //forward
+                    if(map[stringCoord]){
+                        exit1[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[0] = i;
+                    }
+
+                    var stringCoord = (x-4).toString() +","+ (z).toString(); //right
+                    if(map[stringCoord]){ 
+                        exit1[2] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit1[0] = i;
+                    }
+
+                    //Exit2 south
+                    var stringCoord = (x).toString() +","+ (z-4).toString(); //left
+                    if(map[stringCoord]){
+                        exit2[0] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[2] = i;
+                    }
+
+                    var stringCoord = (x+1).toString() +","+ (z-3).toString(); //forward
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[2] = i;
+                    }
+
+                    var stringCoord = (x+2).toString() +","+ (z-4).toString(); //right
+                    if(map[stringCoord]){ 
+                        exit2[1] = map[stringCoord];
+                        state.objects[map[stringCoord]].exit2[2] = i;
+                    }
+                }
+            }
+
+            object.exit1 = exit1;
+            object.exit2 = exit2;
+            state.objects[i] = object; //save object
+
+        }
+    }
+    state.map = map;
+    console.log(state);
+    return state;
+}

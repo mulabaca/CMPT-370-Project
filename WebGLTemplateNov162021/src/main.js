@@ -183,6 +183,10 @@ async function main() {
     const loadingTime = (then.getTime() - now.getTime()) / 1000;
     console.log(`Scene file loaded in ${loadingTime} seconds.`);
 
+    console.log(`connecting tracks...`);
+    connectTracks(state);
+    console.log(`finished connecting tracks.`)
+
     game = new Game(state);
     await game.onStart();
     loadingPage.remove();
