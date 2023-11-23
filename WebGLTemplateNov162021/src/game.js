@@ -3,6 +3,7 @@ class Game {
         this.state = state;
         this.spawnedObjects = [];
         this.collidableObjects = [];
+        this.trains = [];
     }
 
     // example - we can add our own custom method to our game and call it using 'this.customMethod()'
@@ -41,6 +42,8 @@ class Game {
         this.attachTrains();
         console.log(this.state);
 
+        this.player = this.trains[0]; //No train selection yet.
+
         // this just prevents the context menu from popping up when you right click
         document.addEventListener("contextmenu", (e) => {
             e.preventDefault();
@@ -58,16 +61,40 @@ class Game {
         // this.createSphereCollider(otherCube, 0.5);
 
         // example - setting up a key press event to move an object in the scene
-        document.addEventListener("keypress", (e) => {
+        document.addEventListener("keydown", (e) => {
             e.preventDefault();
 
             switch (e.key) {
                 case "a":
-                    this.cube.translate(vec3.fromValues(0.5, 0, 0));
+                    if(this.state.objects[this.player].steer == 1){ // No double steering
+                        this.state.objects[this.player].steer = 0;
+                    }
                     break;
 
                 case "d":
-                    this.cube.translate(vec3.fromValues(-0.5, 0, 0));
+                    if(this.state.objects[this.player].steer == 1){ 
+                        this.state.objects[this.player].steer = 2;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        });
+        document.addEventListener("keyup", (e) => {
+            e.preventDefault();
+
+            switch (e.key) {
+                case "a":
+                    if(this.state.objects[this.player].steer == 0){ 
+                        this.state.objects[this.player].steer = 1;
+                    }
+                    break;
+
+                case "d":
+                    if(this.state.objects[this.player].steer == 2){ 
+                        this.state.objects[this.player].steer = 1;
+                    }
                     break;
 
                 default:
@@ -151,13 +178,16 @@ class Game {
             var train = this.state.objects[i];
             if(train.name.includes("trainFront")||train.name.includes("trainType")){ //if train
                 train.current_rail = this.state.map[Math.round(train.model.position[0]).toString()+","+ Math.round(train.model.position[2]).toString()]; //save rail on train
-                console.log(train);
                 this.state.objects[train.current_rail].isBusyBy = i; //set rail to busy/occupied by index train
             }
         }
         for (let i = 0; i < this.state.objects.length; i++) {
             train = this.state.objects[i];
             if(train.name.includes("trainFront")){
+
+                train.steer = 1; //set steer value: 0 = left, 1 = forward, 2 = right
+                this.trains.push(i);
+
                 let tracking = i;
                 let ahead = null;
                 while (tracking != null) {
@@ -167,7 +197,6 @@ class Game {
                     tracking = this.backTrackTrack(train.current_rail);
                     train.previous = tracking;
                 } 
-
             }
         }
     }
