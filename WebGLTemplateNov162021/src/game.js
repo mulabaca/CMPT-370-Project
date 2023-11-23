@@ -37,6 +37,10 @@ class Game {
     async onStart() {
         console.log("On start");
 
+        console.log("Attaching trains");
+        this.attachTrains();
+        console.log(this.state);
+
         // this just prevents the context menu from popping up when you right click
         document.addEventListener("contextmenu", (e) => {
             e.preventDefault();
@@ -139,5 +143,70 @@ class Game {
 
         // example - call our collision check method on our cube
         // this.checkCollision(this.cube);
+    }
+
+    //only call this at start of game.
+    attachTrains(){
+        for (let i = 0; i < this.state.objects.length; i++) {
+            var train = this.state.objects[i];
+            if(train.name.includes("trainFront")||train.name.includes("trainType")){ //if train
+                train.current_rail = this.state.map[Math.round(train.model.position[0]).toString()+","+ Math.round(train.model.position[2]).toString()]; //save rail on train
+                console.log(train);
+                this.state.objects[train.current_rail].isBusyBy = i; //set rail to busy/occupied by index train
+            }
+        }
+        for (let i = 0; i < this.state.objects.length; i++) {
+            train = this.state.objects[i];
+            if(train.name.includes("trainFront")){
+                let tracking = i;
+                let ahead = null;
+                while (tracking != null) {
+                    train = this.state.objects[tracking];
+                    train.next = ahead;
+                    ahead = tracking;
+                    tracking = this.backTrackTrack(train.current_rail);
+                    train.previous = tracking;
+                } 
+
+            }
+        }
+    }
+
+    backTrackTrack(trackIndex){
+        var exit = null;
+        if(this.state.objects[trackIndex].direction != 2){
+            //check exit2
+            for (let i = 0; i < 3; i++) {
+
+                exit = this.state.objects[trackIndex].exit2[i];
+                if (exit != null && this.state.objects[exit].isBusyBy){
+                    this.state.objects[trackIndex].direction = 1;
+                    this.setDirection(this.state.objects[exit], trackIndex);
+                    return this.state.objects[exit].isBusyBy; //return train index
+                }
+            }
+        }
+        if(this.state.objects[trackIndex].direction != 1){
+            //check the other direction
+            for (let i = 0; i < 3; i++) {
+                exit = this.state.objects[trackIndex].exit1[i]
+                if (exit != null && this.state.objects[exit].isBusyBy){
+                    this.state.objects[trackIndex].direction = 2;
+                    this.setDirection(this.state.objects[exit], trackIndex);
+                    return this.state.objects[exit].isBusyBy; //return train index
+                }
+            }
+        }
+        return null;
+    }
+
+    setDirection(track, headIndex){
+        
+        if(track.exit1.includes(headIndex)){
+            track.direction = 1; //train going from exit2 to exit1
+        }else{
+            track.direction = 2;
+        }
+       
     }
 }
