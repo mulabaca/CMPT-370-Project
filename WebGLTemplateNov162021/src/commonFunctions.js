@@ -472,7 +472,7 @@ function connectTracks(state){
             map[x.toString() +","+ z.toString()] = i; //save object index in coords
 
             //save position on map
-            if(object.model.position[0]%1 == 0){   //if absolut coords (straight rails)
+            if(x%2 == 0){   //if absolut coords (straight rails)
                 
                 object.horizontal = object.model.rotation[0] > 0.5; //direction
 
@@ -732,6 +732,6 @@ function connectTracks(state){
         }
     }
     state.map = map;
-    console.log(state);
+    //console.log(state);
     return state;
 }
