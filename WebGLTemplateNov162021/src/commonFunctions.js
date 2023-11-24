@@ -450,7 +450,11 @@ async function addMesh(object, vertShader = null, fragShader = null) {
 }
 
 
-
+/**
+ * Connects all train tracks with each other.
+ * @param {*} state 
+ * @returns 
+ */
 function connectTracks(state){
     map = {};
 
@@ -477,7 +481,7 @@ function connectTracks(state){
                     var stringCoord = (x-3).toString() +","+ (z+1).toString(); //left
                     if(map[stringCoord]){              //if left exists: save exit left
                         exit1[0] = map[stringCoord];
-                        state.objects[map[stringCoord]].exit2[1] = i;
+                        state.objects[map[stringCoord]].exit1[1] = i;
                     }
 
                     var stringCoord = (x-2).toString() +","+ z.toString(); //forward
@@ -489,14 +493,14 @@ function connectTracks(state){
                     var stringCoord = (x-3).toString() +","+ (z-1).toString(); //right
                     if(map[stringCoord]){
                         exit1[2] = map[stringCoord];
-                        state.objects[map[stringCoord]].exit2[1] = i;
+                        state.objects[map[stringCoord]].exit1[1] = i;
                     }
 
                     //Exit2 west
                     var stringCoord = (x+3).toString() +","+ (z-1).toString(); //left
                     if(map[stringCoord]){
                         exit2[0] = map[stringCoord];
-                        state.objects[map[stringCoord]].exit2[1] = i;
+                        state.objects[map[stringCoord]].exit1[1] = i;
                     }
 
                     var stringCoord = (x+2).toString() +","+ z.toString(); //forward
@@ -508,7 +512,7 @@ function connectTracks(state){
                     var stringCoord = (x+3).toString() +","+ (z+1).toString(); //right
                     if(map[stringCoord]){
                         exit2[2] = map[stringCoord];
-                        state.objects[map[stringCoord]].exit2[1] = i;
+                        state.objects[map[stringCoord]].exit1[1] = i;
                     }
                 
                 }else{
@@ -541,7 +545,7 @@ function connectTracks(state){
                     var stringCoord = (x).toString() +","+ (z-2).toString(); //forward
                     if(map[stringCoord]){
                         exit2[1] = map[stringCoord];
-                        state.objects[map[stringCoord]].exit2[1] = i;
+                        state.objects[map[stringCoord]].exit1[1] = i;
                     }
 
                     var stringCoord = (x+1).toString() +","+ (z-3).toString(); //right
@@ -633,7 +637,7 @@ function connectTracks(state){
 
                     var stringCoord = (x).toString() +","+ (z-4).toString(); //right
                     if(map[stringCoord]){ 
-                        exit2[1] = map[stringCoord];
+                        exit2[2] = map[stringCoord];
                         state.objects[map[stringCoord]].exit2[0] = i;
                     }
 
@@ -675,7 +679,7 @@ function connectTracks(state){
 
                     var stringCoord = (x).toString() +","+ (z+4).toString(); //right
                     if(map[stringCoord]){ 
-                        exit2[1] = map[stringCoord];
+                        exit2[2] = map[stringCoord];
                         state.objects[map[stringCoord]].exit2[0] = i;
                     }
 
@@ -710,7 +714,7 @@ function connectTracks(state){
                     var stringCoord = (x+1).toString() +","+ (z-3).toString(); //forward
                     if(map[stringCoord]){ 
                         exit2[1] = map[stringCoord];
-                        state.objects[map[stringCoord]].exit2[2] = i;
+                        state.objects[map[stringCoord]].exit1[2] = i;
                     }
 
                     var stringCoord = (x+2).toString() +","+ (z-4).toString(); //right
