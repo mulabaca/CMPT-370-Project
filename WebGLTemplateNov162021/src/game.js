@@ -49,6 +49,11 @@ class Game {
             e.preventDefault();
         }, false);
 
+
+        // example - set an object in onStart before starting our render loop!
+        this.cube = getObject(this.state, "train");
+        const otherCube = getObject(this.state, "cube2"); // we wont save this as instance var since we dont plan on using it in update
+
         this.tickStart = new Date().getTime();
         this.tickLength = 1000;
 
@@ -85,6 +90,11 @@ class Game {
 
             switch (e.key) {
                 case "a":
+                    this.cube.translate(vec3.fromValues(4, 0, 0));
+                    break;
+
+                case "d":
+                    this.cube.translate(vec3.fromValues(-4, 0, 0));
                     if(this.getObject(this.player).steer == 0){ 
                         this.getObject(this.player).steer = 1;
                     }
