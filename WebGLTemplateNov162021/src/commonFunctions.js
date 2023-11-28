@@ -458,9 +458,11 @@ async function addMesh(object, vertShader = null, fragShader = null) {
 function connectTracks(state){
     map = {};
 
+    console.log("Test");
+
     for (let i = 0; i < state.objects.length; i++) {
         var object = state.objects[i];
-
+          
         if(object.name.includes("trackType")){
 
             x = Math.round(object.model.position[0]);
@@ -728,7 +730,6 @@ function connectTracks(state){
             object.exit1 = exit1;
             object.exit2 = exit2;
             state.objects[i] = object; //save object
-
         }
     }
     state.map = map;

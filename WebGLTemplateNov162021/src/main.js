@@ -131,7 +131,9 @@ async function main() {
                 float diff = max(dot(normal, L), 0.0);
         
                 //TODO: remove diffuseVal when implementing textures
-                reflectedLight += diff * pointLights[i].colour * pointLights[i].strength * diffuseVal;
+                //Removed pointLights strength temporarily. Had to crank up
+                //light strength in construction yard to 500 to properly see the map.
+                reflectedLight += diff * pointLights[i].colour * 1.5f * diffuseVal;
         
                 //Specular
                 vec3 R = normalize(oCameraPosition - oFragPosition);
@@ -142,7 +144,7 @@ async function main() {
                 reflectedLight += specularVal * vec3(1.0,1.0,1.0) * NH;
             }
         
-            vec3 ambient = vec3(0.3, 0.3, 0.3)*ambientVal;
+            vec3 ambient = vec3(0.3, 0.3, 0.3) * ambientVal;
         
             fragColor = vec4(ambient + reflectedLight, 1.0);
         }
