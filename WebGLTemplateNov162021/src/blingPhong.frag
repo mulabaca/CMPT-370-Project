@@ -16,7 +16,10 @@ uniform float nVal;
 //camera
 uniform vec3 oCameraPosition;
 
-
+//texture
+uniform int samplerExists;
+uniform sampler2D uTexture;
+in vec2 oUV;
 
 //lights
 uniform int numLights;

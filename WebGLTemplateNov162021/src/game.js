@@ -299,11 +299,11 @@ class Game {
             else train.current_rail = track.exit2[2];
         }
 
-        console.log("Advancing...");
-        console.log(train.last_rail);
-        console.log(this.getObject(train.last_rail))
-        console.log("to");
-        console.log(train.current_rail);
+        // console.log("Advancing...");
+        // console.log(train.last_rail);
+        // console.log(this.getObject(train.last_rail))
+        // console.log("to");
+        // console.log(train.current_rail);
         
         this.setDirection(this.getObject(train.current_rail), train.last_rail, false);
 
@@ -344,6 +344,10 @@ class Game {
      */
     rotateCart(train, tickProgress){
         //from last_rotation turn (45 degrees * t)
+    }
+
+    advanceRotation(train){
+        //set last_rotation to -/+ 45 deegrees if rotation happened
     }
 
     // Runs once every frame non stop after the scene loads

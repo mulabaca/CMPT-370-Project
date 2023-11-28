@@ -67,6 +67,8 @@ async function main() {
         out vec3 oFragPosition;
         out vec3 oCameraPosition;
 
+        out vec2 oUV;
+
         void main() {
             // normal
             oNormal = (normalMatrix * vec4(aNormal, 0.0)).xyz;
@@ -79,6 +81,8 @@ async function main() {
 
             //fragment position
             oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
+
+            oUV = aUV;
         }
         `;
 
