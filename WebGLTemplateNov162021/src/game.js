@@ -4,6 +4,13 @@ class Game {
         this.spawnedObjects = [];
         this.collidableObjects = [];
         this.state.trains = []
+
+        const direction = Object.freeze({
+            NORTH: 0,
+            EAST: 1,
+            SOUTH: 2,
+            WEST: 3
+        });
     }
 
     // example - we can add our own custom method to our game and call it using 'this.customMethod()'
