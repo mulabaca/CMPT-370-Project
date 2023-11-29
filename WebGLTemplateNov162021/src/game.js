@@ -5,11 +5,17 @@ class Game {
         this.collidableObjects = [];
         this.state.trains = []
 
-        const direction = Object.freeze({
+        this.direction = Object.freeze({
             NORTH: 0,
             EAST: 1,
             SOUTH: 2,
             WEST: 3
+        });
+
+        this.steer = Object.freeze({
+            LEFT: 0,
+            FORWARD: 1,
+            RIGHT: 2
         });
     }
 
@@ -57,12 +63,8 @@ class Game {
         }, false);
 
 
-        // example - set an object in onStart before starting our render loop!
-        this.cube = getObject(this.state, "train");
-        const otherCube = getObject(this.state, "cube2"); // we wont save this as instance var since we dont plan on using it in update
-
         this.tickStart = new Date().getTime();
-        this.tickLength = 1000;
+        this.tickLength = 500;
 
         // example - create sphere colliders on our two objects as an example, we give 2 objects colliders otherwise
         // no collision can happen
@@ -77,14 +79,14 @@ class Game {
 
             switch (e.key) {
                 case "a":
-                    if(this.getObject(this.player).steer == 1){ // No double steering
-                        this.getObject(this.player).steer = 0;
+                    if(this.getObject(this.player).steer == this.steer.FORWARD){ // No double steering
+                        this.getObject(this.player).steer = this.steer.LEFT;
                     }
                     break;
 
                 case "d":
-                    if(this.getObject(this.player).steer == 1){ 
-                        this.getObject(this.player).steer = 2;
+                    if(this.getObject(this.player).steer == this.steer.FORWARD){ 
+                        this.getObject(this.player).steer = this.steer.RIGHT;
                     }
                     break;
 
@@ -96,20 +98,17 @@ class Game {
             e.preventDefault();
 
             switch (e.key) {
-                case "a":
-                    this.cube.translate(vec3.fromValues(4, 0, 0));
-                    break;
 
-                case "d":
-                    this.cube.translate(vec3.fromValues(-4, 0, 0));
-                    if(this.getObject(this.player).steer == 0){ 
-                        this.getObject(this.player).steer = 1;
+                case "a":
+                    
+                    if(this.getObject(this.player).steer == this.steer.LEFT){ 
+                        this.getObject(this.player).steer = this.steer.FORWARD;
                     }
                     break;
 
                 case "d":
-                    if(this.getObject(this.player).steer == 2){ 
-                        this.getObject(this.player).steer = 1;
+                    if(this.getObject(this.player).steer == this.steer.RIGHT){ 
+                        this.getObject(this.player).steer = this.steer.FORWARD;
                     }
                     break;
 
@@ -166,64 +165,36 @@ class Game {
     attachTrains(){
         for (let i = 0; i < this.state.objects.length; i++) {
             var train = this.getObject(i);
-            if(train.name.includes("trainFront")||train.name.includes("trainType")){ //if train
-                train.current_rail = this.state.map[Math.round(train.model.position[0]).toString()+","+ Math.round(train.model.position[2]).toString()]; //save rail on train
-                this.getObject(train.current_rail).isBusyBy = i; //set rail to busy/occupied by index train
+            if(train.name.includes("train")){ //if train
+                train.coords = [train.model.position[0], train.model.position[2]]; //save train x,z coords during tick
+                train.direction = this.direction.WEST; //should change when detecting other carts. Only the engine cart should have this
+                train.steer = this.steer.FORWARD; //TODO: delete when moovement is working. Only the engine cart should steer
+                train.steerRotation = this.steer.FORWARD;
                 train.last_rotation = train.model.rotation;
+                train.previous = null; //no other carts right now
+                this.state.trains.push(i); // more to move
             }
         }
-        for (let i = 0; i < this.state.objects.length; i++) {
-            train = this.getObject(i);
-            if(train.name.includes("trainFront")){
+        // for (let i = 0; i < this.state.objects.length; i++) {  //connect the rest of carts
+        //     train = this.getObject(i);
+        //     if(train.name.includes("trainFront")){
 
-                train.steer = 1; //set steer value: 0 = left, 1 = forward, 2 = right
-                this.state.trains.push(i);
+        //         train.steer = this.steer.FORWARD;
+        //         this.state.trains.push(i);
 
-                let tracking = i;
-                let ahead = null;
-                while (tracking != null) {
-                    train = this.getObject(tracking);
-                    train.next = ahead;
-                    ahead = tracking;
-                    tracking = this.backTrackTrack(train.current_rail);
-                    train.previous = tracking;
-                } 
-            }
-        }
+        //         let tracking = i;
+        //         let ahead = null;
+        //         while (tracking != null) {
+        //             train = this.getObject(tracking);
+        //             train.next = ahead;
+        //             ahead = tracking;
+        //             tracking = this.backTrackTrack(train.coords);
+        //             train.previous = tracking;
+        //         } 
+        //     }
+        // }
     }
 
-    /**
-     * backtracks through train tracks to find the attached carts
-     * @param {int} trackIndex 
-     * @returns 
-     */
-    backTrackTrack(trackIndex){
-        var exit = null;
-        if(this.getObject(trackIndex).direction != 2){
-            //check exit2
-            for (let i = 0; i < 3; i++) {
-
-                exit = this.getObject(trackIndex).exit2[i];
-                if (exit != null && this.getObject(exit).isBusyBy){
-                    this.getObject(trackIndex).direction = 1;
-                    this.setDirection(this.getObject(exit), trackIndex);
-                    return this.getObject(exit).isBusyBy; //return train index
-                }
-            }
-        }
-        if(this.getObject(trackIndex).direction != 1){
-            //check the other direction
-            for (let i = 0; i < 3; i++) {
-                exit = this.getObject(trackIndex).exit1[i]
-                if (exit != null && this.getObject(exit).isBusyBy){
-                    this.getObject(trackIndex).direction = 2;
-                    this.setDirection(this.getObject(exit), trackIndex);
-                    return this.getObject(exit).isBusyBy; //return train index
-                }
-            }
-        }
-        return null;
-    }
 
     FindByName(name){
         let obj = ""; 
@@ -249,94 +220,205 @@ class Game {
     }
 
     /**
-     * sets train direction on the traintrack
-     * @param {*} track 
-     * @param {int} headIndex Traintrack index of the other cart
-     * @param {boolean} [backtrack=true] true if used while backtracking, else change to false
-     */
-    setDirection(track, headIndex, backtrack = true){
-        //console.log("setting direction of");
-        //console.log(track);
-        if(track.exit1.includes(headIndex)){
-            if(backtrack){
-                track.direction = 1; //train going from exit2 to exit1
-            }else{
-                track.direction = 2;
-            }
-            
-        }else{
-            if(backtrack){
-                track.direction = 2;
-            }else{
-                track.direction = 1;
-            }
-        }
-    }
-
-    /**
      * Updates entire train to the next track
      * @param {int} trainIndex 
      */
     advanceTrain(trainIndex){
+        console.log("steering:");
+        console.log(this.getObject(this.player).steer);
         var train = this.getObject(trainIndex);
         
         var following = this.getObject(train.previous);
-        train.last_rail = train.current_rail;
-        var track = this.getObject(train.current_rail);
+        train.last_coords = train.coords;
+        this.rotateCart(train, 1);
+        train.last_rotation = train.model.rotation;
 
         //move to next track
-        if(train.steer === 0 && track.direction === 1){
-            if(track.exit1[0] != null) train.current_rail = track.exit1[0];
-            else if(track.exit1[1] != null)train.current_rail = track.exit1[1];
-            else train.current_rail = track.exit1[2];
-        }
-        else if(train.steer === 0 && track.direction === 2){
-            if(track.exit2[0] != null) train.current_rail = track.exit2[0];
-            else if(track.exit2[1] != null)train.current_rail = track.exit2[1];
-            else train.current_rail = track.exit2[2];
-        }
-        else if(train.steer === 2 && track.direction === 1){
-            if(track.exit1[2] != null) train.current_rail = track.exit1[2];
-            else if(track.exit1[1] != null)train.current_rail = track.exit1[1];
-            else train.current_rail = track.exit1[0];
-        }
-        else if(train.steer === 2 && track.direction === 2){
-            if(track.exit2[2] != null) train.current_rail = track.exit2[2];
-            else if(track.exit2[1] != null)train.current_rail = track.exit2[1];
-            else train.current_rail = track.exit2[0];
-        }
-        else if (track.direction === 1) {
-            if(track.exit1[1] != null) train.current_rail = track.exit1[1];
-            else if(track.exit1[0] != null)train.current_rail = track.exit1[0];
-            else train.current_rail = track.exit1[2];
-        }
-        else{
-            if(track.exit2[1] != null) train.current_rail = track.exit2[1];
-            else if(track.exit2[0] != null)train.current_rail = track.exit2[0];
-            else train.current_rail = track.exit2[2];
+        if((train.coords[0].toString() +"," + train.coords[1].toString()) in this.state.map){
+            var exit = null;
+
+            if (train.direction == this.direction.SOUTH || train.direction == this.direction.EAST) {
+                exit = this.state.map[train.coords[0].toString() +"," + train.coords[1].toString()][0];
+            }else{
+                exit = this.state.map[train.coords[0].toString() +"," + train.coords[1].toString()][1];
+            }
+
+            if(!exit[0] && !exit[1] && !exit[2]){
+                //move forward
+                console.log("forward");
+                this.updateCoords(train, this.steer.FORWARD);
+            }
+
+            else if(train.steer == this.steer.LEFT){
+                if(exit[0]){
+                    this.updateCoords(train, this.steer.LEFT);
+                }else if(exit[1]){
+                    this.updateCoords(train, this.steer.FORWARD);
+                }else{
+                    this.updateCoords(train, this.steer.RIGHT);
+                }
+            }
+            else if(train.steer == this.steer.FORWARD){
+                if(exit[1]){
+                    this.updateCoords(train, this.steer.FORWARD);
+                }else if(exit[0]){
+                    this.updateCoords(train, this.steer.LEFT);
+                }else{
+                    this.updateCoords(train, this.steer.RIGHT);
+                }
+            }else{ //if steer right
+                if(exit[2]){
+                    this.updateCoords(train, this.steer.RIGHT);
+                }else if(exit[1]){
+                    this.updateCoords(train, this.steer.FORWARD);
+                }else{
+                    this.updateCoords(train, this.steer.LEFT);
+                }
+            }
+        }else{
+            this.updateCoords(train, this.steer.FORWARD);
         }
 
-        // console.log("Advancing...");
-        // console.log(train.last_rail);
-        // console.log(this.getObject(train.last_rail))
-        // console.log("to");
-        // console.log(train.current_rail);
+        console.log("Advancing...");
+        console.log(train.last_coords);
+        console.log("to");
+        console.log(train.coords);
         
-        this.setDirection(this.getObject(train.current_rail), train.last_rail, false);
 
         //update the rest of the carts
         while(following != null){
-            if(following.last_rail){
-                this.getObject(following.last_rail).isBusyBy = null;
-            }
-            following.last_rail = following.current_rail;
-            following.current_rail = train.last_rail;
+        
+            following.last_coords = following.coords;
+            train.last_coords = train.coords;
+            this.rotateCart(following, 1);
+            train.last_rotation = train.model.rotation;
+            following.coords = train.last_coords; //pass last coords to following cart
+
             train = following;
-            
             following = this.getObject(following.previous);
-            this.setDirection(this.getObject(train.current_rail), train.last_rail, false);
+
+            
         }
     }
+
+    updateCoords(train, steer){
+        console.log("updating to:");
+        console.log(steer);
+        console.log(this.steer.FORWARD);
+        let coords = train.coords;
+        let direction = train.direction; 
+        switch (direction) {
+            case this.direction.EAST:
+                switch (steer) {
+                    case this.steer.LEFT:
+                        train.coords = [coords[0] + 2, coords[1] - 2];
+                        train.direction = this.direction.NORTH;
+                        train.steerRotation = this.steer.LEFT;
+                        
+                        break;
+
+                    case this.steer.FORWARD:
+                        train.coords = [coords[0] + 2, coords[1]];
+                        train.steerRotation = this.steer.FORWARD;
+                        break;
+
+                    case this.steer.RIGHT:
+                        train.coords = [coords[0] + 2, coords[1] + 2];
+                        train.direction = this.direction.SOUTH;
+                        train.steerRotation = this.steer.RIGHT;
+                        break;
+                
+                    default:
+                        break;
+                }
+                
+                break;
+
+            case this.direction.NORTH:
+                switch (steer) {
+                    case this.steer.LEFT:
+                        train.coords = [coords[0] - 2, coords[1] - 2];
+                        train.direction = this.direction.WEST;
+                        train.steerRotation = this.steer.LEFT;
+                        break;
+
+                    case this.steer.FORWARD:
+                        train.coords = [coords[0], coords[1] - 2];
+                        train.steerRotation = this.steer.FORWARD;
+                        break;
+
+                    case this.steer.RIGHT:
+                        train.coords = [coords[0] + 2, coords[1] - 2];
+                        train.direction = this.direction.EAST;
+                        train.steerRotation = this.steer.RIGHT;
+                        break;
+                
+                    default:
+                        break;
+                }
+                
+                break;
+
+            case this.direction.WEST:
+                
+                switch (steer) {
+                    case this.steer.LEFT:
+                        train.coords = [coords[0] - 2, coords[1] + 2];
+                        train.direction = this.direction.SOUTH;
+                        train.steerRotation = this.steer.LEFT;
+                        break;
+
+                    case this.steer.FORWARD:
+                        train.coords = [coords[0] - 2, coords[1]];
+                        train.steerRotation = this.steer.FORWARD;
+                        break;
+
+                    case this.steer.RIGHT:
+                        console.log("here");
+                        train.coords = [coords[0] - 2, coords[1] - 2];
+                        train.direction = this.direction.NORTH;
+                        train.steerRotation = this.steer.RIGHT;
+                        break;
+                
+                    default:
+                        break;
+                }
+                
+                break;
+
+            case this.direction.SOUTH:
+                
+                switch (steer) {
+                    case this.steer.LEFT:
+                        train.coords = [coords[0] + 2, coords[1] + 2];
+                        train.direction = this.direction.EAST;
+                        train.steerRotation = this.steer.LEFT;
+                        break;
+
+                    case this.steer.FORWARD:
+                        train.coords = [coords[0], coords[1] + 2];
+                        train.steerRotation = this.steer.FORWARD;
+                        break;
+
+                    case this.steer.RIGHT:
+                        train.coords = [coords[0] - 2, coords[1] + 2];
+                        train.direction = this.direction.WEST;
+                        train.steerRotation = this.steer.RIGHT;
+                        break;
+                
+                    default:
+                        break;
+                }
+                
+                break;
+        
+            default:
+                break;
+        }
+        return train
+
+    }
+
 
     /**
      * Interpolates position of cart between ticks
@@ -345,10 +427,10 @@ class Game {
      */
     moveCart(train, tickProgress){
         // At + (1-t)B
-        if(train.last_rail){
+        if(train.last_coords){
 
-            const A = this.getObject(train.current_rail).model.position;
-            const B = this.getObject(train.last_rail).model.position;
+            const A = vec3.fromValues(train.coords[0], 0.0, train.coords[1]);
+            const B = vec3.fromValues(train.last_coords[0], 0.0, train.last_coords[1]);
             train.model.position = vec3.add([],vec3.scale([], A, tickProgress), vec3.scale([], B, 1-tickProgress));
         }
         return train;
@@ -360,12 +442,24 @@ class Game {
      * @param {*} tickProgress 
      */
     rotateCart(train, tickProgress){
-        //from last_rotation turn (45 degrees * t)
+        var degrees;
+        switch (train.steerRotation) {
+            case this.steer.LEFT:
+                degrees = Math.PI*tickProgress/2;
+                break;
+
+            case this.steer.RIGHT:
+                degrees = -Math.PI*tickProgress/2;
+                break;
+        
+            default:
+                return;
+        }
+        
+        let rotation = mat4.rotateY([], train.last_rotation, degrees);
+        train.model.rotation = rotation;
     }
 
-    advanceRotation(train){
-        //set last_rotation to -/+ 45 deegrees if rotation happened
-    }
 
     // Runs once every frame non stop after the scene loads
     onUpdate(deltaTime) {
@@ -384,8 +478,9 @@ class Game {
 
         //TODO move and interpolate rotation
         this.state.objects.forEach(object => {
-            if(object.name.includes("trainType") || object.name.includes("trainFront")){
+            if(object.name.includes("train")){
                 object = this.moveCart(object, tickProgress);
+                this.rotateCart(object, tickProgress);
             }
         });
     }

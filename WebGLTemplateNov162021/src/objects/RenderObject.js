@@ -85,7 +85,7 @@ class RenderObject {
   }
 
   lightingShader() {
-    console.log(this.model.vertices)
+    //console.log(this.model.vertices)
 
     const shaderProgram = initShaderProgram(this.gl, this.vertShader, this.fragShader);
     // Collect all the info needed to use the shader program.
