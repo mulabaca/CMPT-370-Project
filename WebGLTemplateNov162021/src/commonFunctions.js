@@ -536,11 +536,11 @@ function connectTracks(state){
                     exit2[2] = true;
                 }
             }
-            
+
             map[x.toString() +","+ z.toString()] = [exit1, exit2];
         }
     }
     state.map = map;
-    //console.log(state);
+    console.log(state);
     return state;
 }

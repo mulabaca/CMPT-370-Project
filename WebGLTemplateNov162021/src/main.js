@@ -67,7 +67,7 @@ async function main() {
         out vec3 oFragPosition;
         out vec3 oCameraPosition;
 
-        out vec2 oUV;
+        //out vec2 oUV;
 
         void main() {
             // normal
@@ -82,7 +82,7 @@ async function main() {
             //fragment position
             oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
 
-            oUV = aUV;
+            //oUV = aUV;
         }
         `;
 
@@ -144,7 +144,7 @@ async function main() {
                 reflectedLight += specularVal * vec3(1.0,1.0,1.0) * NH;
             }
         
-            vec3 ambient = vec3(0.3, 0.3, 0.3) * ambientVal;
+            vec3 ambient = vec3(0.5, 1.0, 0.5) * ambientVal;
         
             fragColor = vec4(ambient + reflectedLight, 1.0);
         }
