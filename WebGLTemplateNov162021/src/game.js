@@ -66,6 +66,12 @@ class Game {
         this.tickStart = new Date().getTime();
         this.tickLength = 500;
 
+        var camera = this.state.camera;
+
+        camera.position = vec3.fromValues(0, 35.0, 0);
+        camera.up = vec3.fromValues(0, 0, -1);
+        camera.front = vec3.fromValues(0, -35.0, 0);
+
         // example - create sphere colliders on our two objects as an example, we give 2 objects colliders otherwise
         // no collision can happen
         // this.createSphereCollider(this.cube, 0.5, (otherObject) => {
@@ -90,6 +96,12 @@ class Game {
                     }
                     break;
 
+                case "z":
+                    camera.position = vec3.fromValues(0, 35.0, 0);
+                    camera.up = vec3.fromValues(0, 0, -1);
+                    camera.front = vec3.fromValues(0, -35.0, 0);
+                    this.perspective = 1;
+
                 default:
                     break;
             }
@@ -111,6 +123,9 @@ class Game {
                         this.getObject(this.player).steer = this.steer.FORWARD;
                     }
                     break;
+
+                    case "z":
+                        this.perspective = 0;
 
                 default:
                     break;
@@ -464,6 +479,11 @@ class Game {
     // Runs once every frame non stop after the scene loads
     onUpdate(deltaTime) {
         // TODO - Here we can add game logic, like moving game objects, detecting collisions, you name it. Examples of functions can be found in sceneFunctions
+
+        var mainTrain = this.getObject(this.player).model.position;
+        if (!this.perspective) {
+            this.state.camera.position = vec3.fromValues(mainTrain[0], 10, mainTrain[2]);
+        }
 
         const then = new Date();
         var tickProgress = (then.getTime() - this.tickStart)/this.tickLength;

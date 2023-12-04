@@ -125,6 +125,8 @@ async function main() {
             vec3 reflectedLight;
         
             for(int i = 0; i < numLights; i++) {
+                float dist = length(pointLights[i].position - oFragPosition);
+                float attenuation = pointLights[i].strength / (1.0 + pointLights[i].linear * dist + pointLights[i].quadratic * (dist * dist));
         
                 //diffuse
                 vec3 L = normalize(pointLights[i].position - oFragPosition); //light direction
@@ -133,7 +135,7 @@ async function main() {
                 //TODO: remove diffuseVal when implementing textures
                 //Removed pointLights strength temporarily. Had to crank up
                 //light strength in construction yard to 500 to properly see the map.
-                reflectedLight += diff * pointLights[i].colour * 1.5f * diffuseVal;
+                reflectedLight += diff * pointLights[i].colour * 1.5f * diffuseVal * attenuation;
         
                 //Specular
                 vec3 R = normalize(oCameraPosition - oFragPosition);
@@ -141,7 +143,7 @@ async function main() {
                 float NH = dot(normal,H);
                 NH = pow(NH, nVal);
                 //                 ks         * ls                          * NH
-                reflectedLight += specularVal * vec3(1.0,1.0,1.0) * NH;
+                reflectedLight += specularVal * vec3(1.0,1.0,1.0) * NH * attenuation;
             }
         
             vec3 ambient = vec3(0.5, 1.0, 0.5) * ambientVal;
