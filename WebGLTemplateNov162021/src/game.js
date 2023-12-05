@@ -17,6 +17,8 @@ class Game {
             FORWARD: 1,
             RIGHT: 2
         });
+        this.CAMERA_DISTANCE = 8;
+        this.CAMERA_HEIGHT = 5;
     }
 
     // example - we can add our own custom method to our game and call it using 'this.customMethod()'
@@ -50,6 +52,9 @@ class Game {
     // runs once on startup after the scene loads the objects
     async onStart() {
         console.log("On start");
+
+        //set up camera
+        this.defaultCameraPos = vec3.fromValues(this.CAMERA_DISTANCE, this.CAMERA_HEIGHT, 0); //player position is 0,0,0
 
         console.log("Attaching trains");
         this.attachTrains();
@@ -186,6 +191,8 @@ class Game {
                 train.steer = this.steer.FORWARD; //TODO: delete when moovement is working. Only the engine cart should steer
                 train.steerRotation = this.steer.FORWARD;
                 train.last_rotation = train.model.rotation;
+                this.state.camera.last_pos = this.state.camera.position;
+
                 train.previous = null; //no other carts right now
                 this.state.trains.push(i); // more to move
             }
@@ -247,6 +254,7 @@ class Game {
         train.last_coords = train.coords;
         this.rotateCart(train, 1);
         train.last_rotation = train.model.rotation;
+        this.state.camera.last_pos = this.state.camera.position;
 
         //move to next track
         if((train.coords[0].toString() +"," + train.coords[1].toString()) in this.state.map){
@@ -307,6 +315,7 @@ class Game {
             train.last_coords = train.coords;
             this.rotateCart(following, 1);
             train.last_rotation = train.model.rotation;
+            this.state.camera.last_pos = this.state.camera.position;
             following.coords = train.last_coords; //pass last coords to following cart
 
             train = following;
@@ -475,15 +484,54 @@ class Game {
         train.model.rotation = rotation;
     }
 
+    rotateCamera(train, tickProgress){
+        var degrees;
+        switch (train.steerRotation) {
+            case this.steer.LEFT:
+                degrees = Math.PI*tickProgress/2 - Math.PI/2;
+                break;
+
+            case this.steer.RIGHT:
+                degrees = -Math.PI*tickProgress/2 + Math.PI/2;
+                break;
+        
+            default:
+                return;
+        }
+        
+        vec3.rotateY(this.state.camera.position, this.state.camera.last_pos, train.model.position, degrees);
+    }
+
+    updateDefaultCameraPos(mainTrain){
+        switch (mainTrain.direction) {
+            case this.direction.EAST:
+                this.defaultCameraPos = vec3.fromValues(-this.CAMERA_DISTANCE, this.CAMERA_HEIGHT, 0);
+                break;
+            
+            case this.direction.NORTH:
+                this.defaultCameraPos = vec3.fromValues(0, this.CAMERA_HEIGHT, this.CAMERA_DISTANCE);
+                break;
+            
+            case this.direction.WEST:
+                this.defaultCameraPos = vec3.fromValues(this.CAMERA_DISTANCE, this.CAMERA_HEIGHT, 0);
+                break;
+            
+            case this.direction.SOUTH:
+                this.defaultCameraPos = vec3.fromValues(0, this.CAMERA_HEIGHT, -this.CAMERA_DISTANCE);
+                break;
+        
+            default:
+                break;
+        }
+    }
+
 
     // Runs once every frame non stop after the scene loads
     onUpdate(deltaTime) {
         // TODO - Here we can add game logic, like moving game objects, detecting collisions, you name it. Examples of functions can be found in sceneFunctions
 
-        var mainTrain = this.getObject(this.player).model.position;
-        if (!this.perspective) {
-            this.state.camera.position = vec3.fromValues(mainTrain[0], 10, mainTrain[2]);
-        }
+        var mainTrain = this.getObject(this.player);
+        
 
         const then = new Date();
         var tickProgress = (then.getTime() - this.tickStart)/this.tickLength;
@@ -496,13 +544,23 @@ class Game {
             tickProgress -= 1;
         }
 
-        //TODO move and interpolate rotation
+        //move and interpolate rotation for each train
         this.state.objects.forEach(object => {
             if(object.name.includes("train")){
                 object = this.moveCart(object, tickProgress);
                 this.rotateCart(object, tickProgress);
             }
         });
+
+        if (!this.perspective) {
+            this.state.camera.up = vec3.fromValues(0,1,0);
+            this.updateDefaultCameraPos(mainTrain);
+            vec3.add(this.state.camera.position, mainTrain.model.position, this.defaultCameraPos);
+            this.rotateCamera(mainTrain, tickProgress);
+            vec3.subtract(this.state.camera.front, mainTrain.model.position, this.state.camera.position);
+        }
+
+        
     }
     
 }
