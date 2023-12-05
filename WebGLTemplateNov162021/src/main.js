@@ -128,6 +128,8 @@ async function main() {
             vec3 normal = normalize(oNormal);
         
             vec3 reflectedLight;
+
+            vec3 textureColour = vec3(1, 1, 1);
         
             for(int i = 0; i < numLights; i++) {
                 float dist = length(pointLights[i].position - oFragPosition);
@@ -143,11 +145,10 @@ async function main() {
 
                 // texture doesn't show for me for whatever reason.
                 // seems fragment shader isn't receiving any uniforms??
-                vec3 textureColour = vec3(1, 1, 1);
                 if (samplerExists == 1) {
                     textureColour = texture(uTexture, oUV).rgb;
                 }
-                reflectedLight += diff * pointLights[i].colour * 1.5f * diffuseVal * attenuation * textureColour;
+                reflectedLight += diff * pointLights[i].colour * 1.5f * diffuseVal * attenuation;
         
                 //Specular
                 vec3 R = normalize(oCameraPosition - oFragPosition);
@@ -160,9 +161,7 @@ async function main() {
         
             vec3 ambient = vec3(0.8, 0.8, 0.8) * ambientVal;
         
-            // TODO: Set the last value to alpha. Doing it right now turns every object white.
-            // TODO: Add texture to the ground mesh. Technically it's doing it right now, but nothing shows up.
-            fragColor = vec4(ambient + reflectedLight, 1.0);
+            fragColor = vec4((ambient + reflectedLight) * textureColour, alpha);
         }
         `;
 
@@ -375,7 +374,7 @@ function drawScene(gl, deltaTime, state) {
                     state.samplerExists = 1;
                     gl.activeTexture(gl.TEXTURE0);
                     gl.uniform1i(object.programInfo.uniformLocations.samplerExists, state.samplerExists);
-                    gl.uniform1i(object.programInfo.uniformLocations.sampler, object.model.texture);
+                    gl.uniform1i(object.programInfo.uniformLocations.sampler, 0);
                     gl.bindTexture(gl.TEXTURE_2D, object.model.texture);
                 } else {
                     gl.activeTexture(gl.TEXTURE0);
