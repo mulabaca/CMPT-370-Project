@@ -56,6 +56,7 @@ async function main() {
         `#version 300 es
         in vec3 aPosition;
         in vec3 aNormal;
+        in vec2 aUV;
 
         uniform mat4 uProjectionMatrix;
         uniform mat4 uViewMatrix;
@@ -67,7 +68,7 @@ async function main() {
         out vec3 oFragPosition;
         out vec3 oCameraPosition;
 
-        //out vec2 oUV;
+        out vec2 oUV;
 
         void main() {
             // normal
@@ -82,7 +83,7 @@ async function main() {
             //fragment position
             oFragPosition = (uModelMatrix * vec4(aPosition, 1.0)).xyz;
 
-            //oUV = aUV;
+            oUV = aUV;
         }
         `;
 
@@ -101,11 +102,15 @@ async function main() {
         uniform vec3 ambientVal;
         uniform vec3 specularVal;
         uniform float nVal;
+        uniform float alpha;
         
         //camera
         uniform vec3 oCameraPosition;
         
-        
+        //texture
+        uniform int samplerExists;
+        uniform sampler2D uTexture;
+        in vec2 oUV;
         
         //lights
         uniform int numLights;
@@ -135,7 +140,14 @@ async function main() {
                 //TODO: remove diffuseVal when implementing textures
                 //Removed pointLights strength temporarily. Had to crank up
                 //light strength in construction yard to 500 to properly see the map.
-                reflectedLight += diff * pointLights[i].colour * 1.5f * diffuseVal * attenuation;
+
+                // texture doesn't show for me for whatever reason.
+                // seems fragment shader isn't receiving any uniforms??
+                vec3 textureColour = vec3(1, 1, 1);
+                if (samplerExists == 1) {
+                    textureColour = texture(uTexture, oUV).rgb;
+                }
+                reflectedLight += diff * pointLights[i].colour * 1.5f * diffuseVal * attenuation * textureColour;
         
                 //Specular
                 vec3 R = normalize(oCameraPosition - oFragPosition);
@@ -143,11 +155,13 @@ async function main() {
                 float NH = dot(normal,H);
                 NH = pow(NH, nVal);
                 //                 ks         * ls                          * NH
-                reflectedLight += specularVal * vec3(1.0,1.0,1.0) * NH * attenuation;
+                reflectedLight += specularVal * vec3(1.0,1.0,1.0) * NH;
             }
         
-            vec3 ambient = vec3(0.5, 1.0, 0.5) * ambientVal;
+            vec3 ambient = vec3(0.8, 0.8, 0.8) * ambientVal;
         
+            // TODO: Set the last value to alpha. Doing it right now turns every object white.
+            // TODO: Add texture to the ground mesh. Technically it's doing it right now, but nothing shows up.
             fragColor = vec4(ambient + reflectedLight, 1.0);
         }
         `;
@@ -272,6 +286,16 @@ function drawScene(gl, deltaTime, state) {
     sorted.map((object) => {
         gl.useProgram(object.programInfo.program);
         {
+            if (object.material.alpha < 1) {
+                gl.depthMask(false);
+                gl.enable(gl.BLEND);
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            } else {
+                gl.disable(gl.BLEND);
+                gl.depthMask(true);
+                gl.enable(gl.DEPTH_TEST);
+                gl.depthFunc(gl.LEQUAL);
+            }
             // Projection Matrix ....
             let projectionMatrix = mat4.create();
             let fovy = 90.0 * Math.PI / 180.0; // Vertical field of view in radians
@@ -328,6 +352,7 @@ function drawScene(gl, deltaTime, state) {
             gl.uniform3fv(object.programInfo.uniformLocations.ambientVal, object.material.ambient);
             gl.uniform3fv(object.programInfo.uniformLocations.specularVal, object.material.specular);
             gl.uniform1f(object.programInfo.uniformLocations.nVal, object.material.n);
+            gl.uniform1f(object.programInfo.uniformLocations.alpha, object.material.alpha);
 
             gl.uniform1i(object.programInfo.uniformLocations.numLights, state.numLights);
             if (state.pointLights.length > 0) {
@@ -346,11 +371,11 @@ function drawScene(gl, deltaTime, state) {
                 gl.bindVertexArray(object.buffers.vao);
 
                 //check for diffuse texture and apply it
-                if (object.model.texture != null) {
+                if (object.material.shaderType === 3) {
                     state.samplerExists = 1;
                     gl.activeTexture(gl.TEXTURE0);
                     gl.uniform1i(object.programInfo.uniformLocations.samplerExists, state.samplerExists);
-                    gl.uniform1i(object.programInfo.uniformLocations.sampler, 0);
+                    gl.uniform1i(object.programInfo.uniformLocations.sampler, object.model.texture);
                     gl.bindTexture(gl.TEXTURE_2D, object.model.texture);
                 } else {
                     gl.activeTexture(gl.TEXTURE0);
@@ -359,7 +384,7 @@ function drawScene(gl, deltaTime, state) {
                 }
 
                 //check for normal texture and apply it
-                if (object.model.textureNorm != null) {
+                if (object.material.shaderType === 4) {
                     state.samplerNormExists = 1;
                     gl.activeTexture(gl.TEXTURE1);
                     gl.uniform1i(object.programInfo.uniformLocations.normalSamplerExists, state.samplerNormExists);
