@@ -185,39 +185,40 @@ class Game {
     attachTrains(){
         for (let i = 0; i < this.state.objects.length; i++) {
             var train = this.getObject(i);
-            if(train.name.includes("train")){ //if train
+            if(train.name.includes("train") || train.name.includes("oil_tank")){ //if train
                 train.coords = [train.model.position[0], train.model.position[2]]; //save train x,z coords during tick
                 train.direction = this.direction.WEST; //should change when detecting other carts. Only the engine cart should have this
-                train.steer = this.steer.FORWARD; //TODO: delete when moovement is working. Only the engine cart should steer
-                train.steerRotation = this.steer.FORWARD;
+
+
                 train.last_rotation = train.model.rotation;
+                train.steerRotation = this.steer.FORWARD;
+                train.last_steer = this.steer.FORWARD;
                 this.state.camera.last_pos = this.state.camera.position;
 
                 train.previous = null; //no other carts right now
                 this.state.trains.push(i); // more to move
             }
         }
-        // for (let i = 0; i < this.state.objects.length; i++) {  //connect the rest of carts
-        //     train = this.getObject(i);
-        //     if(train.name.includes("trainFront")){
-
-        //         train.steer = this.steer.FORWARD;
-        //         this.state.trains.push(i);
-
-        //         let tracking = i;
-        //         let ahead = null;
-        //         while (tracking != null) {
-        //             train = this.getObject(tracking);
-        //             train.next = ahead;
-        //             ahead = tracking;
-        //             tracking = this.backTrackTrack(train.coords);
-        //             train.previous = tracking;
-        //         } 
-        //     }
-        // }
+        for (let i = 0; i < this.state.trains.length; i++) {  //connect the rest of carts
+            train = this.getObject(this.state.trains[i]);
+            if(train.name.includes("train")){
+                
+                train.steer = this.steer.FORWARD;
+                train.previous = this.findDirection(train);
+                
+                let otherTrain = this.getObject(train.previous);
+                otherTrain.next = this.state.trains[i];
+                otherTrain.previous = null;
+            }
+        }
     }
 
 
+    /**
+     * 
+     * @param {String} name 
+     * @returns 
+     */
     FindByName(name){
         let obj = ""; 
         this.state.objects.forEach(object => {
@@ -230,7 +231,7 @@ class Game {
 
     /**
      * for whatever reason, state.objects gets resorted, breaking everything.
-     * @param {*} i index where object used to be
+     * @param {int} i index where object used to be
      * @returns correct object
      */
     getObject(i){
@@ -238,7 +239,40 @@ class Game {
             const name = this.state.loadObjects[i].name;
             return this.FindByName(name);
         }
+        return null;
         
+    }
+
+    /**
+     * finds direction and connects cart
+     * @param {*} train 
+     * @returns attached trained
+     */
+    findDirection(train){
+        for (let i = 0; i < this.state.trains.length; i++) {
+            let  otherTrainID = this.state.trains[i];
+            let otherTrain = this.getObject(otherTrainID);
+            let Xdiff = otherTrain.model.position[0] - train.model.position[0];
+            let Zdiff = otherTrain.model.position[2] - train.model.position[2];
+            
+            if(Xdiff == 2 && Zdiff == 0){
+
+                train.direction = this.direction.WEST;
+                return otherTrainID;
+            }
+            else if(Xdiff == -2 && Zdiff == 0){
+                train.direction = this.direction.EAST;
+                return otherTrainID;
+            }
+            else if(Zdiff == 2 && Xdiff == 0){
+                train.direction = this.direction.NORTH;
+                return otherTrainID;
+            }
+            else if(Zdiff == -2 && Xdiff == 0){
+                train.direction = this.direction.SOUTH;
+                return otherTrainID;
+            }
+        }
     }
 
     /**
@@ -248,13 +282,24 @@ class Game {
     advanceTrain(trainIndex){
         console.log("steering:");
         console.log(this.getObject(this.player).steer);
-        var train = this.getObject(trainIndex);
+        let train = this.getObject(trainIndex);
+
+        console.log(train);
+        if(!train.name.includes("train")){
+            return;
+        }
         
-        var following = this.getObject(train.previous);
+        let following = this.getObject(train.previous);
         train.last_coords = train.coords;
         this.rotateCart(train, 1);
         train.last_rotation = train.model.rotation;
         this.state.camera.last_pos = this.state.camera.position;
+
+        train.last_steer = train.steerRotation;
+
+        if(trainIndex != this.player){
+            train.steer = Math.floor(Math.random() * 3);
+        }
 
         //move to next track
         if((train.coords[0].toString() +"," + train.coords[1].toString()) in this.state.map){
@@ -268,7 +313,6 @@ class Game {
 
             if(!exit[0] && !exit[1] && !exit[2]){
                 //move forward
-                console.log("forward");
                 this.updateCoords(train, this.steer.FORWARD);
             }
 
@@ -307,24 +351,35 @@ class Game {
         console.log("to");
         console.log(train.coords);
         
-
         //update the rest of the carts
         while(following != null){
-        
+
+            following.last_rotation = following.model.rotation;
+            following.model.rotation = train.last_rotation;
+            following.last_steer = following.steerRotation;
+            following.steerRotation = train.last_steer;
+
             following.last_coords = following.coords;
-            train.last_coords = train.coords;
-            this.rotateCart(following, 1);
-            train.last_rotation = train.model.rotation;
-            this.state.camera.last_pos = this.state.camera.position;
+            following.coords = train.last_coords;
             following.coords = train.last_coords; //pass last coords to following cart
 
-            train = following;
-            following = this.getObject(following.previous);
+            
+
+            train = this.getObject(train.previous);
+            following = this.getObject(train.previous);
 
             
         }
+        
+        this.state.camera.last_pos = this.state.camera.position;
     }
 
+    /**
+     * 
+     * @param {*} train 
+     * @param {int} steer 
+     * @returns 
+     */
     updateCoords(train, steer){
         console.log("updating to:");
         console.log(steer);
@@ -452,9 +507,10 @@ class Game {
     moveCart(train, tickProgress){
         // At + (1-t)B
         if(train.last_coords){
-
+            
             const A = vec3.fromValues(train.coords[0], 0.0, train.coords[1]);
             const B = vec3.fromValues(train.last_coords[0], 0.0, train.last_coords[1]);
+
             train.model.position = vec3.add([],vec3.scale([], A, tickProgress), vec3.scale([], B, 1-tickProgress));
         }
         return train;
@@ -467,6 +523,7 @@ class Game {
      */
     rotateCart(train, tickProgress){
         var degrees;
+
         switch (train.steerRotation) {
             case this.steer.LEFT:
                 degrees = Math.PI*tickProgress/2;
@@ -545,11 +602,11 @@ class Game {
         }
 
         //move and interpolate rotation for each train
-        this.state.objects.forEach(object => {
-            if(object.name.includes("train")){
-                object = this.moveCart(object, tickProgress);
-                this.rotateCart(object, tickProgress);
-            }
+        this.state.trains.forEach(id => {
+            let object = this.getObject(id);
+            object = this.moveCart(object, tickProgress);
+            this.rotateCart(object, tickProgress);
+            
         });
 
         if (!this.perspective) {
