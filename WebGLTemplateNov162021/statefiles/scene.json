@@ -19492,7 +19492,7 @@
             {
                 "name": "tracks",
                 "material": {
-                    "diffuse": [
+                    "diffuseaaa": [
                         0.5882,
                         0.5882,
                         0.5882
@@ -19885,9 +19885,9 @@
                 "name": "oil_tank-copy-copy",
                 "material": {
                     "diffuse": [
-                        0,
+                        1,
                         0.2,
-                        1
+                        0
                     ],
                     "ambient": [
                         0.3,
@@ -19963,8 +19963,8 @@
         "settings": {
             "backgroundColor": [
                 0,
-                0,
-                0
+                0.5,
+                9
             ],
             "camera": {
                 "name": "mainCamera",
