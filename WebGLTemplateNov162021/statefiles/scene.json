@@ -19549,9 +19549,9 @@
                 "name": "ground",
                 "material": {
                     "diffuse": [
-                        0.22745098039215686,
-                        0.5333333333333333,
-                        0.2627450980392157
+                        0.5882,
+                        0.5882,
+                        0.5882
                     ],
                     "ambient": [
                         0.3,
@@ -19564,21 +19564,21 @@
                         0.5
                     ],
                     "n": 10.000002,
-                    "shaderType": 1,
+                    "shaderType": 3,
                     "alpha": 1
                 },
-                "type": "mesh",
+                "type": "plane",
                 "position": [
                     0,
-                    0,
+                    -0.5,
                     0
                 ],
                 "scale": [
+                    256,
                     1,
-                    1,
-                    1
+                    256
                 ],
-                "diffuseTexture": "default.jpg",
+                "diffuseTexture": "Grass_001_COLOR.jpg",
                 "normalTexture": "defaultNorm.jpg",
                 "rotation": [
                     1,
@@ -19599,7 +19599,7 @@
                     1
                 ],
                 "parent": null,
-                "model": "ground.obj"
+                "model": null
             },
             {
                 "name": "train",
