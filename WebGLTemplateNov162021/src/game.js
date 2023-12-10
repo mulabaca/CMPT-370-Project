@@ -90,9 +90,15 @@ class Game {
     // runs once on startup after the scene loads the objects
     async onStart() {
         console.log("On start");
+        console.log(this.state);
 
         //set up camera
         this.defaultCameraPos = vec3.fromValues(this.CAMERA_DISTANCE, this.CAMERA_HEIGHT, 0); //player position is 0,0,0
+
+        let ground = this.FindByName("ground");
+        let tracks = this.FindByName("tracks");
+        vec3.add(ground.centroid, ground.centroid, vec3.fromValues(0.0, -50, 0.0));
+        vec3.add(tracks.centroid, tracks.centroid, vec3.fromValues(0.0, -49, 0.0));
 
         console.log("Attaching trains");
         this.attachTrains();
@@ -217,7 +223,7 @@ class Game {
     /**
      * 
      * @param {String} name 
-     * @returns 
+     * @returns object with name
      */
     FindByName(name){
         let obj = ""; 

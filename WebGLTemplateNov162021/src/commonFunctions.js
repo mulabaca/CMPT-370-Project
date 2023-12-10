@@ -466,7 +466,7 @@ function connectTracks(state){
         if(object.name.includes("node")){ //for each node
 
             x = object.model.position[0];
-            object.model.position[1] = -2;  //bury node
+            object.model.position[1] = -52;  //bury node
             z = object.model.position[2];
 
             nodeMap.push(x.toString() +","+ z.toString());
@@ -481,7 +481,7 @@ function connectTracks(state){
         if(object.name.includes("intersection")){
 
             x = object.model.position[0];
-            object.model.position[1] = -2;  //bury head node
+            object.model.position[1] = -52;  //bury head node
             z = object.model.position[2];
 
 
